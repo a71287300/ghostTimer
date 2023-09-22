@@ -42,7 +42,7 @@ class FloatingWindow:
         initial_X = config.get('Display', 'initial_X')
         initial_Y = config.get('Display', 'initial_Y')
         xy = initial_X+'+'+initial_Y
-        wh = str(font_size*6) + "x" + str(font_size*2)
+        wh = str(font_size*9) + "x" + str(font_size*2)
         self.root = root
         self.root.title("Timer")
         self.root.overrideredirect(True)
