@@ -2,15 +2,27 @@
 __pycache__/
 *.py[cod]
 *$py.class
+<<<<<<< HEAD
 
+=======
+# MP3
+ghostAlert.mp3
+cat.*
+>>>>>>> a40bbad (initial)
 # C extensions
 *.so
 
 # Distribution / packaging
 .Python
+<<<<<<< HEAD
 build/
 develop-eggs/
 dist/
+=======
+build/*
+develop-eggs/
+dist/*
+>>>>>>> a40bbad (initial)
 downloads/
 eggs/
 .eggs/
