@@ -1,12 +1,10 @@
+import re
 import threading
 import keyboard
 import pygame
 import time
-import sys
 import configparser
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont
+import tkinter as tk
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -23,36 +21,45 @@ end_pressed = False  # 用于标记是否按下End键
 play_interval = initial_interval
 start_time = None  # 用于记录开始播放音乐的时间
 
-class FloatingWindow(QWidget):
-    def __init__(self):
-        super().__init__()
+def rgb_to_hex(rgb_str):
+    # 使用正则表达式提取RGB值
+    rgb_match = re.match(r"rgb\((\d+),(\d+),(\d+)\)", rgb_str)
+    
+    if rgb_match:
+        r, g, b = map(int, rgb_match.groups())
+        hex_color = "#{:02x}{:02x}{:02x}".format(r, g, b)
+        return hex_color
+    else:
+        return None
+    
+    
+class FloatingWindow:
+    def __init__(self, root):
+        
+        font_size = int(config.get('Display', 'font_size'))
+        font_color_rgb = config.get('Display', 'font_color')
+        font_background_rgb = config.get('Display', 'font_background')
+        initial_X = config.get('Display', 'initial_X')
+        initial_Y = config.get('Display', 'initial_Y')
+        xy = initial_X+'+'+initial_Y
+        wh = str(font_size*6) + "x" + str(font_size*2)
+        self.root = root
+        self.root.title("Timer")
+        self.root.overrideredirect(True)
         if display:
-            print("Display mode", display)
-            self.setWindowTitle("Timer")
-            self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
-            self.setAttribute(Qt.WA_TranslucentBackground)
-            x = int(config.get('Display', 'initial_X'))
-            y = int(config.get('Display', 'initial_Y'))
-            self.setGeometry(0, 0, x+2560, y+1440)
-            # 创建文本标签并设置文本、字体、颜色和背景色（带透明度）
-            self.label = QLabel("等待啟動", self)
-            font_size = int(config.get('Display', 'font_size'))
-            self.label.setGeometry(x, y, x+font_size*7, y+font_size*2)
-            # 设置字体和颜色
-            font = QFont()
-            
-            font.setPointSize(font_size)
-            self.label.setFont(font)
-            # 设置红色文本和白色背景，背景颜色带透明度（50%）
-            font_color = config.get('Display', 'font_color')
-            font_background = config.get('Display', 'font_background')
-            font_setting = "color: " + font_color + "; background-color: " + font_background + ";"
-            self.label.setStyleSheet(font_setting)
-            self.show()
+            alpha = 0.7
+        else:
+            alpha = 0
+        self.root.wm_attributes('-alpha', alpha)
+        self.root.geometry(wh+"+"+xy)
+        self.root.attributes('-topmost', True)
+        self.label = tk.Label(root, text="等待啟動", font=("Arial", font_size), bg=rgb_to_hex(font_background_rgb), fg=rgb_to_hex(font_color_rgb))
+        self.label.pack(fill="both", expand=True)
+       
+        
     
     def change_text(self, new_text):
-        # 这个函数会在按钮被点击时调用，用于更改文本内容
-        self.label.setText(new_text)
+        self.label.config(text=new_text)
 
 def stop_music():
     global playing, end_pressed, play_interval
@@ -94,18 +101,20 @@ def play_music():
         time.sleep(0.1)
 
 def exit_app():
-    app.quit()
+    if display:
+        window.change_text("關閉中...")
+    else:
+        print("關閉中...")
+    root.quit()
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    global display 
+    root = tk.Tk()
     display = config.getboolean('Display', 'enable')
-    if display:
-        window = FloatingWindow()
+    window = FloatingWindow(root)
     start_key = config.get('Hotkey', 'start_key')
     stop_key = config.get('Hotkey', 'stop_key')
     quit_key = config.get('Hotkey', 'quit_key')
     keyboard.on_press_key(start_key, lambda e: threading.Thread(target=play_music).start())
     keyboard.on_press_key(stop_key, lambda e: stop_music())
     keyboard.add_hotkey(quit_key, exit_app)
-    sys.exit(app.exec_())
+    root.mainloop()
